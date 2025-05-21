@@ -91,7 +91,7 @@ int processUserInput() {
 }
 
 void logRound(int ledIndex, int sensorIndex, unsigned long reactionTime) { //NEED TO IMPLEMENT FILE SAVING FUNCTIONS
-  Serial.print("📒 Round ");
+  Serial.print("Round ");
   Serial.print(roundIndex + 1);
   Serial.print(" | LED: ");
   Serial.print(ledIndex);
