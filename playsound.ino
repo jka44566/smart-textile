@@ -6,7 +6,7 @@
 #include <SimpleSDAudio.h>
 #include "PlaySound.h"
 
-// Array of available songs
+// Array of available songs files
 const char* songs[] = {
   "correct.wav",
   "place.wav",
@@ -14,10 +14,11 @@ const char* songs[] = {
 };
 
 void PlaySound::begin() {
+  // Text validation
   Serial.println("Initializing Audio...");
-  // Initialize audio playback library
+  // Initialize audio player
   SdPlay.init(0);
-
+  // Text validation
   Serial.println("Audio initialized.");
 }
 
@@ -26,11 +27,17 @@ void PlaySound::play(int songIndex) {
         Serial.println("Invalid song index.");
         return;
     }
-
     const char* song = songs[songIndex];
-    Serial.print("Playing: ");
-    Serial.println(song);
+    // Create filename to be called 
+    // (pass in copy due to chance setFile might modify string causing errors )
+    char filename[10];
+    strcpy(filename, song);
 
-    SdPlay.setFile(song);
+    // Text validation
+    Serial.print("Playing: ");
+    Serial.println(filename);
+
+    SdPlay.setFile(filename);
     SdPlay.play();
 }
+
