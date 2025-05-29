@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED Reaction Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-container {
+            text-align: center;
+            padding: 20px;
+            max-width: 800px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .led-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 40px 0;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .led {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid #333;
+            background: #444;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            user-select: none;
+        }
+
+        .led:hover {
+            transform: scale(1.05);
+        }
+
+        .led.active {
+            background: #ff4444;
+            box-shadow: 0 0 30px #ff4444;
+            border-color: #ff6666;
+        }
+
+        .led.game-over {
+            background: #ff0000;
+            box-shadow: 0 0 20px #ff0000;
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .controls {
+            margin: 30px 0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-start {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-start:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .btn-start:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-reset {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #da190b;
+            transform: translateY(-2px);
+        }
+
+        .game-status {
+            font-size: 1.3em;
+            margin: 20px 0;
+            min-height: 30px;
+        }
+
+        .difficulty-selector {
+            margin: 20px 0;
+        }
+
+        .difficulty-selector select {
+            padding: 8px 12px;
+            font-size: 1em;
+            border-radius: 5px;
+            border: none;
+            background: white;
+            color: #333;
+        }
+
+        .stats {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .stats h3 {
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #ffd700);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>⚡ LED Reaction Game ⚡</h1>
+        
+        <div class="game-info">
+            <div class="info-item">
+                <div>Round</div>
+                <div class="info-value" id="currentRound">0</div>
+            </div>
+            <div class="info-item">
+                <div>Score</div>
+                <div class="info-value" id="currentScore">0</div>
+            </div>
+            <div class="info-item">
+                <div>Best Time</div>
+                <div class="info-value" id="bestTime">--</div>
+            </div>
+            <div class="info-item">
+                <div>Time Limit</div>
+                <div class="info-value" id="timeLimit">--</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+
+        <div class="led-grid">
+            <div class="led" data-led="0">1</div>
+            <div class="led" data-led="1">2</div>
+            <div class="led" data-led="2">3</div>
+            <div class="led" data-led="3">4</div>
+            <div class="led" data-led="4">5</div>
+            <div class="led" data-led="5">6</div>
+            <div class="led" data-led="6">7</div>
+            <div class="led" data-led="7">8</div>
+            <div class="led" data-led="8">9</div>
+        </div>
+
+        <div class="difficulty-selector">
+            <label for="difficulty">Difficulty: </label>
+            <select id="difficulty">
+                <option value="idea1">Idea 1 (10 rounds: 6s → 1.5s)</option>
+                <option value="idea2">Idea 2 (6 rounds: 10s → 0.5s)</option>
+            </select>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-start" id="startBtn">Hold to Start (3s)</button>
+            <button class="btn btn-reset" id="resetBtn">Reset Game</button>
+        </div>
+
+        <div class="game-status" id="gameStatus">Press and hold "Hold to Start" for 3 seconds to begin!</div>
+
+        <div class="stats">
+            <h3>Game Statistics</h3>
+            <div id="gameStats">
+                <p>Games Played: <span id="gamesPlayed">0</span></p>
+                <p>Average Response Time: <span id="avgResponseTime">--</span></p>
+                <p>Success Rate: <span id="successRate">--</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class LEDReactionGame {
+            constructor() {
+                this.gameState = 'idle'; // idle, starting, playing, gameOver
+                this.currentRound = 0;
+                this.score = 0;
+                this.activeLED = null;
+                this.gameStartTime = null;
+                this.responseStartTime = null;
+                this.holdStartTime = null;
+                this.gameTimeout = null;
+                this.responseTimes = [];
+                this.gameData = [];
+                
+                // Difficulty settings
+                this.difficulties = {
+                    idea1: [6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5],
+                    idea2: [10, 7, 5, 3, 1, 0.5]
+                };
+                this.currentDifficulty = 'idea1';
+                
+                // Statistics
+                this.stats = {
+                    gamesPlayed: 0,
+                    totalResponseTime: 0,
+                    successfulResponses: 0,
+                    totalResponses: 0
+                };
+                
+                this.initializeElements();
+                this.attachEventListeners();
+                this.loadStats();
+            }
+
+            initializeElements() {
+                this.leds = document.querySelectorAll('.led');
+                this.startBtn = document.getElementById('startBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.gameStatus = document.getElementById('gameStatus');
+                this.currentRoundEl = document.getElementById('currentRound');
+                this.currentScoreEl = document.getElementById('currentScore');
+                this.bestTimeEl = document.getElementById('bestTime');
+                this.timeLimitEl = document.getElementById('timeLimit');
+                this.difficultySelect = document.getElementById('difficulty');
+                this.progressBar = document.getElementById('progressBar');
+            }
+
+            attachEventListeners() {
+                // Start button - hold for 3 seconds
+                this.startBtn.addEventListener('mousedown', () => this.startHolding());
+                this.startBtn.addEventListener('mouseup', () => this.stopHolding());
+                this.startBtn.addEventListener('mouseleave', () => this.stopHolding());
+                
+                // Touch events for mobile
+                this.startBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.startHolding();
+                });
+                this.startBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.stopHolding();
+                });
+
+                // Reset button
+                this.resetBtn.addEventListener('click', () => this.resetGame());
+
+                // LED clicks
+                this.leds.forEach((led, index) => {
+                    led.addEventListener('click', () => this.handleLEDPress(index));
+                });
+
+                // Difficulty selector
+                this.difficultySelect.addEventListener('change', (e) => {
+                    this.currentDifficulty = e.target.value;
+                    this.resetGame();
+                });
+            }
+
+            startHolding() {
+                if (this.gameState !== 'idle') return;
+                
+                this.holdStartTime = Date.now();
+                this.gameState = 'starting';
+                this.startBtn.disabled = true;
+                this.updateGameStatus('Hold for 3 seconds...');
+                
+                this.holdInterval = setInterval(() => {
+                    const elapsed = (Date.now() - this.holdStartTime) / 1000;
+                    if (elapsed >= 3) {
+                        this.stopHolding();
+                        this.startGame();
+                    } else {
+                        this.updateGameStatus(`Hold for ${(3 - elapsed).toFixed(1)} more seconds...`);
+                    }
+                }, 100);
+            }
+
+            stopHolding() {
+                if (this.holdInterval) {
+                    clearInterval(this.holdInterval);
+                    this.holdInterval = null;
+                }
+                
+                if (this.gameState === 'starting') {
+                    this.gameState = 'idle';
+                    this.startBtn.disabled = false;
+                    this.updateGameStatus('Press and hold "Hold to Start" for 3 seconds to begin!');
+                }
+            }
+
+            startGame() {
+                this.gameState = 'playing';
+                this.currentRound = 0;
+                this.score = 0;
+                this.responseTimes = [];
+                this.gameData = [];
+                this.updateDisplay();
+                this.updateGameStatus('Game Started! Get ready...');
+                
+                setTimeout(() => {
+                    this.nextRound();
+                }, 1000);
+            }
+
+            nextRound() {
+                if (this.gameState !== 'playing') return;
+                
+                const timeouts = this.difficulties[this.currentDifficulty];
+                if (this.currentRound >= timeouts.length) {
+                    this.gameWon();
+                    return;
+                }
+
+                this.currentRound++;
+                const currentTimeout = timeouts[this.currentRound - 1];
+                
+                // Update display
+                this.updateDisplay();
+                this.timeLimitEl.textContent = currentTimeout + 's';
+                
+                // Random delay before showing LED (0.5-2 seconds)
+                const delay = Math.random() * 1500 + 500;
+                
+                setTimeout(() => {
+                    this.showRandomLED(currentTimeout);
+                }, delay);
+            }
+
+            showRandomLED(timeout) {
+                if (this.gameState !== 'playing') return;
+                
+                // Choose random LED
+                const randomLED = Math.floor(Math.random() * this.leds.length);
+                this.activeLED = randomLED;
+                this.responseStartTime = Date.now();
+                
+                // Light up the LED
+                this.leds[randomLED].classList.add('active');
+                this.updateGameStatus(`Press LED ${randomLED + 1}!`);
+                
+                // Set timeout for game over
+                this.gameTimeout = setTimeout(() => {
+                    this.gameOver();
+                }, timeout * 1000);
+            }
+
+            handleLEDPress(ledIndex) {
+                if (this.gameState !== 'playing' || this.activeLED === null) return;
+                
+                const responseTime = (Date.now() - this.responseStartTime) / 1000;
+                
+                // Clear timeout
+                if (this.gameTimeout) {
+                    clearTimeout(this.gameTimeout);
+                    this.gameTimeout = null;
+                }
+                
+                // Turn off active LED
+                this.leds[this.activeLED].classList.remove('active');
+                
+                // Record data
+                const roundData = {
+                    round: this.currentRound,
+                    correctLED: this.activeLED,
+                    pressedLED: ledIndex,
+                    responseTime: responseTime,
+                    correct: ledIndex === this.activeLED
+                };
+                this.gameData.push(roundData);
+                
+                if (ledIndex === this.activeLED) {
+                    // Correct response
+                    this.score += Math.round((1 / responseTime) * 100);
+                    this.responseTimes.push(responseTime);
+                    this.updateGameStatus(`Correct! ${responseTime.toFixed(3)}s`);
+                    
+                    this.activeLED = null;
+                    
+                    setTimeout(() => {
+                        this.nextRound();
+                    }, 1000);
+                } else {
+                    // Wrong LED pressed
+                    this.gameOver();
+                }
+            }
+
+            gameOver() {
+                this.gameState = 'gameOver';
+                this.activeLED = null;
+                
+                if (this.gameTimeout) {
+                    clearTimeout(this.gameTimeout);
+                    this.gameTimeout = null;
+                }
+                
+                // Light up all LEDs
+                this.leds.forEach(led => {
+                    led.classList.remove('active');
+                    led.classList.add('game-over');
+                });
+                
+                this.updateGameStatus('Game Over! Click Reset to play again.');
+                this.startBtn.disabled = false;
+                this.updateStats();
+                
+                // Remove game-over class after 3 seconds
+                setTimeout(() => {
+                    this.leds.forEach(led => led.classList.remove('game-over'));
+                }, 3000);
+            }
+
+            gameWon() {
+                this.gameState = 'gameOver';
+                this.updateGameStatus('Congratulations! You completed all rounds!');
+                this.startBtn.disabled = false;
+                this.updateStats();
+            }
+
+            resetGame() {
+                this.gameState = 'idle';
+                this.currentRound = 0;
+                this.score = 0;
+                this.activeLED = null;
+                this.responseTimes = [];
+                this.gameData = [];
+                
+                if (this.gameTimeout) {
+                    clearTimeout(this.gameTimeout);
+                    this.gameTimeout = null;
+                }
+                
+                if (this.holdInterval) {
+                    clearInterval(this.holdInterval);
+                    this.holdInterval = null;
+                }
+                
+                // Reset UI
+                this.leds.forEach(led => {
+                    led.classList.remove('active', 'game-over');
+                });
+                
+                this.startBtn.disabled = false;
+                this.updateDisplay();
+                this.updateGameStatus('Press and hold "Hold to Start" for 3 seconds to begin!');
+            }
+
+            updateDisplay() {
+                this.currentRoundEl.textContent = this.currentRound;
+                this.currentScoreEl.textContent = this.score;
+                
+                if (this.responseTimes.length > 0) {
+                    const bestTime = Math.min(...this.responseTimes);
+                    this.bestTimeEl.textContent = bestTime.toFixed(3) + 's';
+                } else {
+                    this.bestTimeEl.textContent = '--';
+                }
+                
+                // Update progress bar
+                const totalRounds = this.difficulties[this.currentDifficulty].length;
+                const progress = (this.currentRound / totalRounds) * 100;
+                this.progressBar.style.width = progress + '%';
+            }
+
+            updateGameStatus(message) {
+                this.gameStatus.textContent = message;
+            }
+
+            updateStats() {
+                this.stats.gamesPlayed++;
+                this.stats.totalResponses += this.gameData.length;
+                
+                this.gameData.forEach(data => {
+                    if (data.correct) {
+                        this.stats.successfulResponses++;
+                        this.stats.totalResponseTime += data.responseTime;
+                    }
+                });
+                
+                this.saveStats();
+                this.displayStats();
+            }
+
+            displayStats() {
+                document.getElementById('gamesPlayed').textContent = this.stats.gamesPlayed;
+                
+                if (this.stats.successfulResponses > 0) {
+                    const avgTime = this.stats.totalResponseTime / this.stats.successfulResponses;
+                    document.getElementById('avgResponseTime').textContent = avgTime.toFixed(3) + 's';
+                    
+                    const successRate = (this.stats.successfulResponses / this.stats.totalResponses) * 100;
+                    document.getElementById('successRate').textContent = successRate.toFixed(1) + '%';
+                } else {
+                    document.getElementById('avgResponseTime').textContent = '--';
+                    document.getElementById('successRate').textContent = '--';
+                }
+            }
+
+            saveStats() {
+                // In a real app, you'd save to a database
+                // For now, we'll use localStorage
+                try {
+                    localStorage.setItem('ledGameStats', JSON.stringify(this.stats));
+                } catch (e) {
+                    console.log('Could not save stats');
+                }
+            }
+
+            loadStats() {
+                try {
+                    const saved = localStorage.getItem('ledGameStats');
+                    if (saved) {
+                        this.stats = { ...this.stats, ...JSON.parse(saved) };
+                    }
+                } catch (e) {
+                    console.log('Could not load stats');
+                }
+                this.displayStats();
+            }
+        }
+
+        // Initialize game when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new LEDReactionGame();
+        });
+    </script>
+</body>
+</html>
