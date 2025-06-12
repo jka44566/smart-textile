@@ -1,4 +1,6 @@
-const int ledPins[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+#include <SPI.h>
+#include <SD.h>
+const int ledPins[16] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17};
 const int fsrPins[16] = {A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15};
 float timeLimits[] = {6000, 5500, 5000, 4500, 4000, 3500, 3000, 2500, 2000, 1500}; //timelimit setup for 10 rounds, can adjust based on audience
 const int totalRounds = 10;
@@ -7,12 +9,28 @@ unsigned long startTime;
 int currentLed = -1; //indicator for the LED/sensor checks
 bool gameActive = false;
 int roundIndex = 0;
+const int chipSelect = 16;
+File logFile;
+
 
 void setup() {
   Serial.begin(9600);
   for (int i = 0; i < 16; i++) {
     pinMode(ledPins[i], OUTPUT);
   }
+
+  if (!SD.begin(chipSelect)) {
+    Serial.println("SD initialization failed!");
+  } else {
+    Serial.println("SD card ready.");
+    // Optional: clear file at start
+    logFile = SD.open("reflex.csv", FILE_WRITE);
+    if (logFile) {
+      logFile.println("Round,LED,Sensor,Time(ms)");
+      logFile.close();
+    }
+  }
+
   randomSeed(analogRead(0));
   Serial.println("Press sensor 0 to start ");
 }
@@ -90,7 +108,7 @@ int processUserInput() {
   return -1;
 }
 
-void logRound(int ledIndex, int sensorIndex, unsigned long reactionTime) { //NEED TO IMPLEMENT FILE SAVING FUNCTIONS
+void logRound(int ledIndex, int sensorIndex, unsigned long reactionTime) {
   Serial.print("Round ");
   Serial.print(roundIndex + 1);
   Serial.print(" | LED: ");
@@ -100,6 +118,20 @@ void logRound(int ledIndex, int sensorIndex, unsigned long reactionTime) { //NEE
   Serial.print(" | Time: ");
   Serial.print(reactionTime);
   Serial.println(" ms");
+  
+  logFile = SD.open("reflex.csv", FILE_WRITE);
+  if (logFile) {
+    logFile.print(roundIndex + 1);
+    logFile.print(",");
+    logFile.print(ledIndex);
+    logFile.print(",");
+    logFile.print(sensorIndex);
+    logFile.print(",");
+    logFile.println(reactionTime);
+    logFile.close();
+  } else {
+    Serial.println("Failed to open file on SD card.");
+  }
 }
 
 void turnOffAllLeds() {
