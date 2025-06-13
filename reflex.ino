@@ -54,7 +54,8 @@ void loop() {
     if (result == currentLed) {
       logRound(currentLed, result, millis() - startTime);
       roundIndex++;
-      delay(1000);
+      turnOffAllLeds();
+      delay(2000);
     } else {
       Serial.println("Timeout or incorrect input. Game Over.");
       gameActive = false;
